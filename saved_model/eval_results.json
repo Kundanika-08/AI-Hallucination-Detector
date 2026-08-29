@@ -1,0 +1,48 @@
+{
+  "model": "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext",
+  "your_model": "./saved_model",
+  "hyperparams": {
+    "max_length": 256,
+    "batch_size": 16,
+    "epochs": 3,
+    "learning_rate": 2e-05,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01,
+    "seed": 42
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "loss": 0.3291,
+      "val_acc": 0.9359,
+      "val_f1": 0.6301
+    },
+    {
+      "epoch": 2,
+      "loss": 0.1643,
+      "val_acc": 0.9424,
+      "val_f1": 0.806
+    },
+    {
+      "epoch": 3,
+      "loss": 0.0998,
+      "val_acc": 0.9449,
+      "val_f1": 0.8459
+    }
+  ],
+  "test_accuracy": 0.9449,
+  "test_macro_f1": 0.8601,
+  "test_precision": 0.8622,
+  "test_recall": 0.8581,
+  "classification_report": "                       precision    recall  f1-score   support\n\n            SUPPORTED       0.95      0.95      0.95      1384\n         HALLUCINATED       0.94      0.95      0.95      1002\nINSUFFICIENT_EVIDENCE       0.69      0.67      0.68        46\n\n             accuracy                           0.94      2432\n            macro avg       0.86      0.86      0.86      2432\n         weighted avg       0.94      0.94      0.94      2432\n",
+  "datasets_used": [
+    "MedHallu/MedHallu",
+    "bigbio/mednli",
+    "qiaojin/PubMedQA (pqa_labeled)"
+  ],
+  "label_scheme": {
+    "0": "SUPPORTED",
+    "1": "HALLUCINATED",
+    "2": "INSUFFICIENT_EVIDENCE"
+  }
+}
