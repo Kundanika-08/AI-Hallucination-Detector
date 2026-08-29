@@ -1,175 +1,272 @@
-# 🧠 MedVerify — Medical Hallucination Detection System
+# 🧠 AI Medical Hallucination Detector
 
-> An intelligent multi-agent NLP system that detects and corrects hallucinations in AI-generated medical text using fine-tuned biomedical models and real-time evidence retrieval.
+An AI-powered medical hallucination detection and verification system that identifies potentially unsupported medical claims, retrieves supporting evidence, ranks the evidence, and generates an evidence-backed response.
 
+## 🎯 Problem Statement
 
+Large Language Models can generate medically inaccurate or unsupported statements. In healthcare-related applications, detecting these hallucinations is especially important because incorrect information can lead to poor decisions.
 
----
+This project builds a multi-stage pipeline that analyzes medical claims, classifies them using a fine-tuned biomedical transformer model, retrieves relevant evidence, and generates a corrected response.
 
-## 🚨 The Problem
+## 🚀 Key Features
 
-Large language models frequently generate **medically inaccurate statements** — a phenomenon called *hallucination*. In healthcare contexts, this is dangerous.
+* **Medical Hallucination Detection** using fine-tuned BiomedBERT
+* **3-class classification**:
 
-> **Example:** An LLM might claim *"Corona is not a virus"* — factually wrong, and potentially harmful if trusted without verification.
-
-MedVerify catches these errors, explains why they're wrong, and provides corrected, evidence-backed responses.
-
----
-
-## ✨ Features
-
--  **Hallucination Detection** — Classifies medical claims as hallucinated or factual with 94.3% accuracy
--  **Multi-Agent Pipeline** — 9 specialized agents handle detection, retrieval, reranking, and correction
--  **Real-Time Evidence Retrieval** — Pulls from PubMed, Semantic Scholar, and Europe PMC
-   **Automated Correction** — Generates corrected statements using Groq LLaMA 3.3 70B
--  **Full-Stack Interface** — React frontend + Flask API backend
-
----
-
-
+  * Supported
+  * Hallucinated
+  * Insufficient Evidence
+* **Multi-agent processing pipeline**
+* **Evidence retrieval** from biomedical sources
+* **BM25-based evidence reranking**
+* **LLM-based correction generation**
+* **Flask REST API** for serving the pipeline
+* **Git LFS** for storing the trained model weights
 
 ## 🏗️ System Architecture
 
+```text
+Medical Claim
+     │
+     ▼
+Claim Processing
+     │
+     ▼
+BiomedBERT Classifier
+     │
+     ├── Supported
+     ├── Hallucinated
+     └── Insufficient Evidence
+     │
+     ▼
+Evidence Retrieval
+     │
+     ├── PubMed
+     ├── Semantic Scholar
+     └── Europe PMC
+     │
+     ▼
+BM25 Evidence Reranking
+     │
+     ▼
+Evidence-based Correction
+     │
+     ▼
+Final Response
 ```
-User Input
-    │
-    ▼
-┌─────────────────────────────────────────┐
-│           React Frontend                │
-└────────────────┬────────────────────────┘
-                 │ REST API
-                 ▼
-┌─────────────────────────────────────────┐
-│           Flask API (api.py)            │
-└────────────────┬────────────────────────┘
-                 │
-        ┌────────┴─────────┐
-        ▼                  ▼
-┌──────────────┐   ┌──────────────────────┐
-│  BiomedBERT  │   │   Evidence Retrieval  │
-│  Classifier  │   │  PubMed / Semantic   │
-│  (94.3% acc) │   │  Scholar / Europe PMC│
-└──────────────┘   └──────────────────────┘
-        │                  │
-        └────────┬─────────┘
-                 ▼
-        ┌──────────────────┐
-        │  Groq LLaMA 3.3  │
-        │  70B Correction  │
-        └──────────────────┘
+
+## 🤖 Multi-Agent Pipeline
+
+The system uses specialized agents for different stages of the verification process.
+
+| Agent                      | Responsibility                                |
+| -------------------------- | --------------------------------------------- |
+| Claim Decomposer           | Breaks medical input into individual claims   |
+| Hallucination Detector     | Classifies claims using fine-tuned BiomedBERT |
+| Query Formulator           | Converts claims into searchable queries       |
+| PubMed Retriever           | Retrieves biomedical evidence                 |
+| Semantic Scholar Retriever | Retrieves relevant research papers            |
+| Europe PMC Retriever       | Retrieves biomedical literature               |
+| BM25 Reranker              | Ranks retrieved evidence by relevance         |
+| Correction Generator       | Generates an evidence-backed correction       |
+| Response Assembler         | Produces the final structured response        |
+
+## 🧠 Machine Learning Model
+
+### Base Model
+
+**Microsoft BiomedBERT**
+
+```text
+microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext
 ```
 
----
+The base biomedical language model was fine-tuned for a 3-class medical hallucination detection task.
 
-## 🤖 The 9-Agent Pipeline
+### Training Configuration
 
-| Agent | Role |
-|---|---|
-| **Input Validator** | Cleans and preprocesses the medical claim |
-| **Hallucination Detector** | BiomedBERT classifier — hallucinated or not |
-| **Query Formulator** | Converts claim into retrieval queries |
-| **PubMed Retriever** | Fetches evidence from PubMed |
-| **Semantic Scholar Retriever** | Fetches from Semantic Scholar |
-| **Europe PMC Retriever** | Fetches from Europe PMC |
-| **BM25 Reranker** | Ranks retrieved evidence by relevance |
-| **Correction Generator** | Uses Groq LLaMA 3.3 70B to generate corrected claim |
-| **Response Assembler** | Combines all results into final structured output |
-
----
+| Parameter               |    Value |
+| ----------------------- | -------: |
+| Maximum sequence length |      256 |
+| Batch size              |       16 |
+| Epochs                  |        3 |
+| Learning rate           | 2 × 10⁻⁵ |
+| Weight decay            |     0.01 |
+| Warmup ratio            |      0.1 |
+| Optimizer               |    AdamW |
 
 ## 📊 Model Performance
 
-| Metric | Score |
-|---|---|
-| Accuracy | **94.3%** |
-| Macro F1 | **0.871** |
-| Base Model | BiomedBERT |
-| Dataset | MedHallu |
+The model was fine-tuned using the project's dataset-loading pipeline and evaluated on a held-out test set.
 
----
+| Metric    |     Result |
+| --------- | ---------: |
+| Accuracy  | **94.49%** |
+| Macro F1  | **86.01%** |
+| Precision | **86.22%** |
+| Recall    | **85.81%** |
 
-## 🛠️ Tech Stack
+### Dataset
 
-**Backend**
-- Python, Flask
-- HuggingFace Transformers (BiomedBERT)
-- Groq API (LLaMA 3.3 70B Versatile)
-- BM25 (rank-bm25)
-- PubMed API, Semantic Scholar API, Europe PMC API
+The training pipeline combined available biomedical/medical datasets and produced:
 
-**Frontend**
-- React.js
-- Axios
+```text
+Total samples: 24,328
 
----
+Training:   19,464
+Validation:  2,432
+Testing:    2,432
+```
 
-## 🚀 Running Locally
+> Note: One optional dataset source (`MedFact`) was unavailable during the training run, so the final dataset consisted of the successfully loaded sources.
 
-### Prerequisites
-- Python 3.9+
-- Node.js 16+
-- Groq API Key ([get one here](https://console.groq.com))
+## 🛠️ Technology Stack
 
-### 1. Clone the repo
+### Machine Learning
+
+* Python
+* PyTorch
+* Hugging Face Transformers
+* BiomedBERT
+* Scikit-learn
+
+### NLP & Retrieval
+
+* Biomedical NLP
+* PubMed
+* Semantic Scholar
+* Europe PMC
+* BM25 ranking
+* Biopython / Entrez
+
+### Backend
+
+* Flask
+* Flask-CORS
+* REST API
+
+### LLM
+
+* Groq API
+* LLaMA-based correction generation
+
+### Development
+
+* Git
+* GitHub
+* Git LFS
+
+## 📁 Project Structure
+
+```text
+AI-Hallucination-Detector/
+│
+├── agents/
+│   ├── medverify_agent.py
+│   └── pipeline_agents.py
+│
+├── config/
+│   └── settings.py
+│
+├── core/
+│   └── base_agent.py
+│
+├── data/
+│   └── load_datasets.py
+│
+├── saved_model/
+│   ├── config.json
+│   ├── eval_results.json
+│   ├── model.safetensors
+│   ├── tokenizer.json
+│   └── tokenizer_config.json
+│
+├── training/
+│   └── train.py
+│
+├── vision/
+│   └── biovil_reader.py
+│
+├── api.py
+├── pipeline.py
+├── README.md
+├── .gitignore
+└── .gitattributes
+```
+
+## ⚙️ Setup
+
+### 1. Clone the repository
+
 ```bash
-git clone https://github.com/tanspan/medverify.git
-cd medverify
+git clone https://github.com/Kundanika-08/AI-Hallucination-Detector.git
+cd AI-Hallucination-Detector
 ```
 
-### 2. Set up the backend
+### 2. Install dependencies
+
+Install the required Python packages used by the project.
+
 ```bash
-pip install -r requirements.txt
+pip install torch transformers datasets scikit-learn accelerate biopython flask flask-cors
 ```
 
-Create a `.env` file in the root:
-```
-GROQ_API_KEY=your_groq_api_key_here
+### 3. Configure environment variables
+
+Create a `.env` file for your API credentials.
+
+```text
+GROQ_API_KEY=your_api_key_here
 ```
 
-Start the Flask API:
+**Never commit `.env` or API keys to GitHub.**
+
+### 4. Run the API
+
 ```bash
 python api.py
 ```
 
-### 3. Set up the frontend
+The Flask backend starts locally and loads the fine-tuned model from:
+
+```text
+saved_model/
+```
+
+## 🔬 Training the Model
+
+The model can be retrained using:
+
 ```bash
-cd frontend
-npm install
-npm start
+python training/train.py
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+The training script:
 
----
+1. Loads the medical datasets.
+2. Creates training, validation, and test splits.
+3. Downloads the BiomedBERT base model.
+4. Fine-tunes the classifier.
+5. Evaluates the model.
+6. Saves the trained model and tokenizer to `saved_model/`.
 
-## 📁 Project Structure
+## 🔐 Security
 
-```
-medverify/
-├── api.py                  # Flask backend & agent orchestration
-├── pipeline.py             # Core multi-agent pipeline
-├── requirements.txt        # Python dependencies
-├── saved_model/            # Fine-tuned BiomedBERT weights
-├── training/               # Model training scripts
-├── vision/                 # (vision module)
-└── frontend/
-    ├── public/
-    └── src/
-        ├── App.js          # Main React component
-        └── index.js
-```
+API keys are stored using environment variables and are excluded from version control.
 
----
+The trained model weights are stored using **Git LFS** because of their large file size.
 
-## 📌 Important Notes
+## 📌 Project Outcome
 
-- The `saved_model/` folder contains fine-tuned weights (~400MB). These are **not included** in the repo due to size. Download separately or retrain using scripts in `training/`.
-- Never commit your `.env` file — it contains your Groq API key.
+The completed system combines:
 
----
+**Transformer-based classification + biomedical evidence retrieval + relevance ranking + LLM-based correction**
 
-##Demo
-<img width="1855" height="527" alt="Screenshot 2026-04-24 133348" src="https://github.com/user-attachments/assets/de11a288-78b1-4593-a382-fc851c309f01" />
-<img width="1219" height="752" alt="Screenshot 2026-04-24 133339" src="https://github.com/user-attachments/assets/95ca1358-3839-4787-9a03-8c5b0572d212" />
-<img width="1140" height="788" alt="Screenshot 2026-04-24 133358" src="https://github.com/user-attachments/assets/7e71c66a-4bbb-4f28-9a19-cccd7b8aa84b" />
-<img width="1102" height="367" alt="Screenshot 2026-04-24 133405" src="https://github.com/user-attachments/assets/d11329dd-8a9b-4096-b844-a423cf1cdcc4" />
+to provide a practical pipeline for identifying and responding to potentially hallucinated medical information.
+
+## 👤 Author
+
+**Kundanika-08**
+
+GitHub:
+https://github.com/Kundanika-08
